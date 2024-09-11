@@ -38,7 +38,7 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
     glm::mat4 R1_o = glm::rotate(glm::mat4(1.0f), _body.orbit.rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));
 
     // Translation: move the celestial body along its orbit radius
-    glm::mat4 T_orbit = glm::translate(glm::mat4(1.0f), glm::vec3(_body.orbit.radius, 3.0f, 3.0f));	//Changed the y and z value so that the moon wouldn't crash into the earth
+    glm::mat4 T_orbit = glm::translate(glm::mat4(1.0f), glm::vec3(_body.orbit.radius, 0.0f, 0.0f));	//Changed the y and z value so that the moon wouldn't crash into the earth
 
     // Combine orbit R2_o, R1_o and translation (orbit transformation)
     glm::mat4 orbit_transform = R2_o * R1_o * T_orbit;
@@ -47,7 +47,7 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
     world *= orbit_transform;
 
     // Apply any scaling / transformations to the globe (if needed)
-    glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(_body.scale));
     world *= scale;
 
     // First rotation: spin around the y-axis (R1,s) using the updated spin angle
@@ -59,12 +59,12 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
     // Combine the spin tilt and rotation
     world *= R2_s * R1_s;
 	
-	glm::mat4 scale_child = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.5f));
+	//glm::mat4 scale_child = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.5f));
 
 	// Compute the matrix for the children (excluding scale and spin rotation)
 	glm::mat4 child_transform = parent_transform * orbit_transform;
 	// Adjustment of the scale of child node
-	child_transform *= scale_child;
+	//child_transform *= scale_child;
     
   //  glm::mat4 child_transform = R2_o * R1_o * T_orbit;
 
@@ -72,7 +72,7 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
     if (show_basis) {
         bonobo::renderBasis(1.0f, 2.0f, view_projection, world);
     }
-	 _body.node.render(view_projection, world);
+	 //_body.node.render(view_projection, world);
     // Render the body using the updated world matrix
     _body.node.render(view_projection, world);
 
