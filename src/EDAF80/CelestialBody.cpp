@@ -59,20 +59,13 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
     // Combine the spin tilt and rotation
     world *= R2_s * R1_s;
 	
-	//glm::mat4 scale_child = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.5f));
-
 	// Compute the matrix for the children (excluding scale and spin rotation)
 	glm::mat4 child_transform = parent_transform * orbit_transform;
-	// Adjustment of the scale of child node
-	//child_transform *= scale_child;
-    
-  //  glm::mat4 child_transform = R2_o * R1_o * T_orbit;
 
     // Render the basis if needed
     if (show_basis) {
         bonobo::renderBasis(1.0f, 2.0f, view_projection, world);
     }
-	 //_body.node.render(view_projection, world);
     // Render the body using the updated world matrix
     _body.node.render(view_projection, world);
 
@@ -123,14 +116,3 @@ void CelestialBody::set_ring(bonobo::mesh_data const& shape,
 
 	_ring.is_set = true;
 }
-/*if (!get_children().empty()) {	// Dont think this is necessary since at the moment we call the render function a couple of time in the main class 
-    std::vector<CelestialBody*> const& children = get_children();
-    for (size_t i = 0; i < children.size(); ++i) {
-        CelestialBody* child = children[i];
-
-        // Apply the child_transform matrix to the child
-        if (child != nullptr) {
-            child->render(elapsed_time, view_projection, child_transform, show_basis);
-        }
-    }
-}*/

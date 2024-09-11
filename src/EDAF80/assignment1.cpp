@@ -178,7 +178,6 @@ int main()
 	mercury.set_scale(mercury_scale);
 	mercury.set_spin(mercury_spin);
 	mercury.set_orbit(mercury_orbit);
-	
 
 	CelestialBody venus(sphere, &celestial_body_shader, venus_texture);
 	venus.set_scale(venus_scale);
@@ -298,19 +297,10 @@ int main()
 		//
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-		// TODO: Replace this explicit rendering of the Earth and Moon
-		// with a traversal of the scene graph and rendering of all its
-		// nodes.
-
 		// Add the root celestial body (e.g., the Earth) to the stack
     	dfs_stack.push({ &sun, glm::mat4(1.0f) }); // Start with identity matrix as the parent transform
 		// Start the DFS traversal
 		dfs_traverse_and_render(&earth, dfs_stack, animation_delta_time_us, camera.GetWorldToClipMatrix(), show_basis);
-		
-    
-		//glm::mat4 earth_transform = earth.render(animation_delta_time_us, camera.GetWorldToClipMatrix(), glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f)), show_basis);
-		//moon.render(animation_delta_time_us, camera.GetWorldToClipMatrix(), earth_transform, show_basis);
-
 
 		//
 		// Add controls to the scene.
@@ -332,7 +322,6 @@ int main()
 		if (show_logs)
 			Log::View::Render();
 		window_manager.RenderImGuiFrame(show_gui);
-
 
 		//
 		// Queue the computed frame for display on screen
@@ -363,8 +352,6 @@ void dfs_traverse_and_render(CelestialBody* root, std::stack<StackElement>& dfs_
 {
     // Perform the DFS traversal
     while (!dfs_stack.empty()) {
-		printf("test\n");
-
         // Pop the top element from the stack
         StackElement current = dfs_stack.top();
         dfs_stack.pop();
