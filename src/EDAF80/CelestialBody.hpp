@@ -1,5 +1,8 @@
 #pragma once
 
+#include <stack>
+#include <memory>
+
 #include "core/helpers.hpp"
 #include "core/node.hpp"
 
@@ -22,7 +25,13 @@ struct OrbitConfiguration
 //! \brief Represents a celestial body
 class CelestialBody
 {
+
+
+
+
 public:
+
+	
 	//! \brief Default constructor for a celestial body.
 	//!
 	//! @param [in] shape Information about the geometry used to model the
@@ -57,8 +66,17 @@ public:
 	//! \brief Return all the children of this celestial body.
 	std::vector<CelestialBody*> const& get_children() const;
 
+	using CelestialBodyRef = std::shared_ptr<CelestialBody>;
+
+	struct StackEntry
+	{
+		CelestialBodyRef body;
+		glm::mat4 transform;
+	};
+
 	//! \brief Configure the orbit parameters for this celestial body.
 	void set_orbit(OrbitConfiguration const& configuration);
+
 
 	//! \brief Configure the scale of this celestial body.
 	void set_scale(glm::vec3 const& scale);
@@ -78,7 +96,6 @@ public:
 	void set_ring(bonobo::mesh_data const& shape, GLuint const* program,
 	              GLuint diffuse_texture_id,
 	              glm::vec2 const& scale = glm::vec2(1.0f));
-
 private:
 	struct {
 		Node node;

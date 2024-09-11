@@ -11,7 +11,16 @@
 
 #include <clocale>
 #include <cstdlib>
+//DFS setup
+struct StackElement {
+        CelestialBody* body;
+        glm::mat4 transform;
+    };
+std::stack<StackElement> dfs_stack;
 
+void dfs_traverse_and_render(CelestialBody* root, std::stack<StackElement>& dfs_stack, 
+                             std::chrono::microseconds animation_delta_time_us, 
+                             glm::mat4 const& world_to_clip_matrix, bool show_basis);
 
 int main()
 {
@@ -113,7 +122,7 @@ int main()
 	SpinConfiguration const earth_spin{ glm::radians(-23.0f), glm::two_pi<float>() / 3.0f };
 	OrbitConfiguration const earth_orbit{ 4.0f, glm::radians(-7.2f), glm::two_pi<float>() / 20.0f };
 
-	glm::vec3 const moon_scale{ 0.01f };
+	glm::vec3 const moon_scale{ 0.02f };
 	SpinConfiguration const moon_spin{ glm::radians(-6.7f), glm::two_pi<float>() / 90.0f };
 	OrbitConfiguration const moon_orbit{ 0.2f, glm::radians(29.0f), glm::two_pi<float>() / 1.3f };
 
@@ -159,7 +168,7 @@ int main()
 	// Set up the celestial bodies.
 	//
 	CelestialBody moon(sphere, &celestial_body_shader, moon_texture);
-	moon.set_scale(glm::vec3(0.3f));
+	moon.set_scale(glm::vec3(0.02f));
 	moon.set_spin(moon_spin);
 	moon.set_orbit({1.5f, glm::radians(-66.0f), glm::two_pi<float>() / 1.3f});
 
@@ -168,7 +177,8 @@ int main()
 	earth.set_orbit({-2.5f, glm::radians(45.0f), glm::two_pi<float>() / 10.0f});
 	earth.add_child(&moon);
 
-
+	// Add the root celestial body (e.g., the Earth) to the stack
+    dfs_stack.push({ &earth, glm::mat4(1.0f) }); // Start with identity matrix as the parent transform
 	//
 	// Define the colour and depth used for clearing.
 	//
@@ -237,20 +247,15 @@ int main()
 		//
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-
-		//
-		// Traverse the scene graph and render all nodes
-		//
-		struct CelestialBodyRef
-		{
-			CelestialBody* body;
-			glm::mat4 parent_transform;
-		};
 		// TODO: Replace this explicit rendering of the Earth and Moon
 		// with a traversal of the scene graph and rendering of all its
 		// nodes.
-		earth.render(animation_delta_time_us, camera.GetWorldToClipMatrix(), glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f)), show_basis);
-		//moon.render(animation_delta_time_us, camera.GetWorldToClipMatrix(), glm::mat4(1.0f), show_basis);
+		// Start the DFS traversal
+		dfs_traverse_and_render(&earth, dfs_stack, animation_delta_time_us, camera.GetWorldToClipMatrix(), show_basis);
+		
+    
+		//glm::mat4 earth_transform = earth.render(animation_delta_time_us, camera.GetWorldToClipMatrix(), glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f)), show_basis);
+		//moon.render(animation_delta_time_us, camera.GetWorldToClipMatrix(), earth_transform, show_basis);
 
 
 		//
@@ -296,4 +301,29 @@ int main()
 	bonobo::deinit();
 
 	return EXIT_SUCCESS;
+}
+// Define a helper method to perform DFS traversal and rendering
+void dfs_traverse_and_render(CelestialBody* root, std::stack<StackElement>& dfs_stack, 
+                             std::chrono::microseconds animation_delta_time_us, 
+                             glm::mat4 const& world_to_clip_matrix, bool show_basis)
+{
+    // Perform the DFS traversal
+    while (!dfs_stack.empty()) {
+        // Pop the top element from the stack
+        StackElement current = dfs_stack.top();
+        dfs_stack.pop();
+	 	// Check if the current body is valid
+        if (current.body == nullptr) continue;
+        // Render the current celestial body
+        glm::mat4 world_transform = current.body->render(animation_delta_time_us,
+                                                         world_to_clip_matrix,
+                                                         current.transform, show_basis);
+
+        // Push all children of the current body onto the stack
+        for (CelestialBody* child : current.body->get_children()) {
+            if (child != nullptr) {
+                dfs_stack.push({ child, world_transform });
+            }
+        }
+    }
 }

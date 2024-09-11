@@ -20,30 +20,64 @@ glm::mat4 CelestialBody::render(std::chrono::microseconds elapsed_time,
                                 glm::mat4 const& parent_transform,
                                 bool show_basis)
 {
-	// Convert the duration from microseconds to seconds.
-	auto const elapsed_time_s = std::chrono::duration<float>(elapsed_time).count();
-	// If a different ratio was needed, for example a duration in
-	// milliseconds, the following would have been used:
-	// auto const elapsed_time_ms = std::chrono::duration<float, std::milli>(elapsed_time).count();
+    // Convert the duration from microseconds to seconds.
+    auto const elapsed_time_s = std::chrono::duration<float>(elapsed_time).count();
 
-	_body.spin.rotation_angle = -glm::half_pi<float>() / 2.0f;
+    // Update spin and orbit angles based on elapsed time
+    _body.spin.rotation_angle += _body.spin.speed * elapsed_time_s;
+    _body.orbit.rotation_angle += _body.orbit.speed * elapsed_time_s;
+ 
 
-	glm::mat4 world = parent_transform;
+    // Initialize the world matrix with the parent transform
+    glm::mat4 world = parent_transform;
 
-	if (show_basis)
-	{
-		bonobo::renderBasis(1.0f, 2.0f, view_projection, world);
-	}
+    // Tilt the orbit plane around the z-axis by the orbit inclination (R2,o)
+    glm::mat4 R2_o = glm::rotate(glm::mat4(1.0f), _body.orbit.inclination, glm::vec3(0.0f, 0.0f, 1.0f));
 
-	// Note: The second argument of `node::render()` is supposed to be the
-	// parent transform of the node, not the whole world matrix, as the
-	// node internally manages its local transforms. However in our case we
-	// manage all the local transforms ourselves, so the internal transform
-	// of the node is just the identity matrix and we can forward the whole
-	// world matrix.
-	_body.node.render(view_projection, world);
+    // Orbit rotation: rotate around the y-axis (R1,o) using the updated orbit angle
+    glm::mat4 R1_o = glm::rotate(glm::mat4(1.0f), _body.orbit.rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));
 
-	return parent_transform;
+    // Translation: move the celestial body along its orbit radius
+    glm::mat4 T_orbit = glm::translate(glm::mat4(1.0f), glm::vec3(_body.orbit.radius, 3.0f, 3.0f));	//Changed the y and z value so that the moon wouldn't crash into the earth
+
+    // Combine orbit R2_o, R1_o and translation (orbit transformation)
+    glm::mat4 orbit_transform = R2_o * R1_o * T_orbit;
+
+    // Apply the orbit transformations: rotate first, then translate
+    world *= orbit_transform;
+
+    // Apply any scaling / transformations to the globe (if needed)
+    glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    world *= scale;
+
+    // First rotation: spin around the y-axis (R1,s) using the updated spin angle
+    glm::mat4 R1_s = glm::rotate(glm::mat4(1.0f), _body.spin.rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    // Second rotation: tilt the spin plane around the z-axis (R2,s)
+    glm::mat4 R2_s = glm::rotate(glm::mat4(1.0f), _body.spin.axial_tilt, glm::vec3(0.0f, 0.0f, 1.0f));
+
+    // Combine the spin tilt and rotation
+    world *= R2_s * R1_s;
+	
+	glm::mat4 scale_child = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.5f));
+
+	// Compute the matrix for the children (excluding scale and spin rotation)
+	glm::mat4 child_transform = parent_transform * orbit_transform;
+	// Adjustment of the scale of child node
+	child_transform *= scale_child;
+    
+  //  glm::mat4 child_transform = R2_o * R1_o * T_orbit;
+
+    // Render the basis if needed
+    if (show_basis) {
+        bonobo::renderBasis(1.0f, 2.0f, view_projection, world);
+    }
+	 _body.node.render(view_projection, world);
+    // Render the body using the updated world matrix
+    _body.node.render(view_projection, world);
+
+    // Return the matrix for the children (computed without scale and spin rotation)
+    return child_transform;
 }
 
 void CelestialBody::add_child(CelestialBody* child)
@@ -89,3 +123,14 @@ void CelestialBody::set_ring(bonobo::mesh_data const& shape,
 
 	_ring.is_set = true;
 }
+/*if (!get_children().empty()) {	// Dont think this is necessary since at the moment we call the render function a couple of time in the main class 
+    std::vector<CelestialBody*> const& children = get_children();
+    for (size_t i = 0; i < children.size(); ++i) {
+        CelestialBody* child = children[i];
+
+        // Apply the child_transform matrix to the child
+        if (child != nullptr) {
+            child->render(elapsed_time, view_projection, child_transform, show_basis);
+        }
+    }
+}*/

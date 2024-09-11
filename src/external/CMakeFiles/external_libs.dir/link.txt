@@ -1,0 +1,2 @@
+/usr/bin/ar qc libexternal_libs.a CMakeFiles/external_libs.dir/Dear_ImGui/imgui.cpp.o CMakeFiles/external_libs.dir/Dear_ImGui/imgui_demo.cpp.o CMakeFiles/external_libs.dir/Dear_ImGui/imgui_draw.cpp.o CMakeFiles/external_libs.dir/Dear_ImGui/imgui_tables.cpp.o CMakeFiles/external_libs.dir/Dear_ImGui/imgui_widgets.cpp.o CMakeFiles/external_libs.dir/Dear_ImGui/imgui_impl_glfw.cpp.o CMakeFiles/external_libs.dir/Dear_ImGui/imgui_impl_opengl3.cpp.o CMakeFiles/external_libs.dir/GLAD/glad.c.o
+/usr/bin/ranlib libexternal_libs.a
