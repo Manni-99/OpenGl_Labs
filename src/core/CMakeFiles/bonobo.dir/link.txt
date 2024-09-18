@@ -1,2 +1,0 @@
-/usr/bin/ar qc libbonobo.a CMakeFiles/bonobo.dir/Bonobo.cpp.o CMakeFiles/bonobo.dir/helpers.cpp.o CMakeFiles/bonobo.dir/InputHandler.cpp.o CMakeFiles/bonobo.dir/Log.cpp.o CMakeFiles/bonobo.dir/LogView.cpp.o CMakeFiles/bonobo.dir/node.cpp.o CMakeFiles/bonobo.dir/opengl.cpp.o CMakeFiles/bonobo.dir/ShaderProgramManager.cpp.o CMakeFiles/bonobo.dir/various.cpp.o CMakeFiles/bonobo.dir/WindowManager.cpp.o CMakeFiles/bonobo.dir/stb_impl.c.o
-/usr/bin/ranlib libbonobo.a

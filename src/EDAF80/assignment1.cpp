@@ -353,7 +353,7 @@ void dfs_traverse_and_render(CelestialBody* root, std::stack<StackElement>& dfs_
     // Perform the DFS traversal
     while (!dfs_stack.empty()) {
         // Pop the top element from the stack
-        StackElement current = dfs_stack.top();
+        StackElement current = dfs_stack.top(); //
         dfs_stack.pop();
 	 	// Check if the current body is valid
         if (current.body == nullptr) continue;

@@ -43,12 +43,14 @@ void
 edaf80::Assignment2::run()
 {
 	// Load the sphere geometry
-	auto const shape = parametric_shapes::createCircleRing(2.0f, 0.75f, 40u, 4u);
+	auto const shape = parametric_shapes::createSphere(0.15f, 10u, 10u);
+	//auto const shape = parametric_shapes::createQuad(0.25f, 0.15f);
+
 	if (shape.vao == 0u)
 		return;
 
 	// Set up the camera
-	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 1.0f, 9.0f));
+	mCamera.mWorld.SetTranslate(glm::vec3(0.0f, 1.0f, 9.0f)); // Old values(0.0f, 0.0f, 0.5f)
 	mCamera.mMouseSensitivity = glm::vec2(0.003f);
 	mCamera.mMovementSpeed = glm::vec3(3.0f); // 3 m/s => 10.8 km/h
 
@@ -129,7 +131,7 @@ edaf80::Assignment2::run()
 	circle_rings.set_geometry(shape);
 	circle_rings.set_program(&fallback_shader, set_uniforms);
 	TRSTransformf& circle_rings_transform_ref = circle_rings.get_transform();
-
+	circle_rings_transform_ref.Translate(glm::vec3(0.0f, 2.0f, 0.0f));
 
 	//! \todo Create a tesselated sphere and a tesselated torus
 
@@ -214,19 +216,33 @@ edaf80::Assignment2::run()
 
 
 		if (interpolate) {
-			//! \todo Interpolate the movement of a shape between various
-			//!        control points.
-			if (use_linear) {
-				//! \todo Compute the interpolated position
-				//!       using the linear interpolation.
-			}
-			else {
-				//! \todo Compute the interpolated position
-				//!       using the Catmull-Rom interpolation;
-				//!       use the `catmull_rom_tension`
-				//!       variable as your tension argument.
-			}
-		}
+          //  if (control_point_locations.size() >= 4) {
+                // Compute the interpolation factor
+                float total_duration = 10.0f; 
+                float t = std::fmod(elapsed_time_s, total_duration) / total_duration;
+
+                // Determine which segment of control points to use
+                size_t segment = static_cast<size_t>(t * (control_point_locations.size() - 3));
+                float local_t = (t * (control_point_locations.size() - 3)) - segment;
+
+                // Get control points for this segment
+                glm::vec3 p0 = control_point_locations[segment];
+                glm::vec3 p1 = control_point_locations[segment + 1];
+                glm::vec3 p2 = control_point_locations[segment + 2];
+                glm::vec3 p3 = control_point_locations[segment + 3];
+
+                glm::vec3 interpolatedPosition;
+
+                if (use_linear) {
+                    interpolatedPosition = interpolation::evalLERP(p0, p1, local_t);
+                } else {
+                    interpolatedPosition = interpolation::evalCatmullRom(p0, p1, p2, p3, catmull_rom_tension, local_t);
+                }
+
+                // Update the object's position
+                circle_rings.get_transform().SetTranslate(interpolatedPosition);
+        //    }
+        }
 
 		circle_rings.render(mCamera.GetWorldToClipMatrix());
 		if (show_control_points) {

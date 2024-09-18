@@ -9,6 +9,9 @@
 #include <iostream>
 #include <vector>
 
+#include <stdio.h>
+
+
 bonobo::mesh_data
 parametric_shapes::createQuad(float const width, float const height,
                               unsigned int const horizontal_split_count,
@@ -48,11 +51,13 @@ parametric_shapes::createQuad(float const width, float const height,
 	// The following function will create new Vertex Arrays, and pass their
 	// name in the given array (second argument). Since we only need one,
 	// pass a pointer to `data.vao`.
-	glGenVertexArrays(1, /*! \todo fill me */nullptr);
+	glGenVertexArrays(1, &data.vao);
+
+
 
 	// To be able to store information, the Vertex Array has to be bound
 	// first.
-	glBindVertexArray(/*! \todo bind the previously generated Vertex Array */0u);
+	glBindVertexArray(data.vao);
 
 	// To store the data, we need to allocate buffers on the GPU. Let's
 	// allocate a first one for the vertices.
@@ -61,18 +66,15 @@ parametric_shapes::createQuad(float const width, float const height,
 	// it will create multiple OpenGL objects, in this case buffers, and
 	// return their names in an array. Have the buffer's name stored into
 	// `data.bo`.
-	glGenBuffers(1, /*! \todo fill me */nullptr);
+	glGenBuffers(1, &data.bo);
 
 	// Similar to the Vertex Array, we need to bind it first before storing
 	// anything in it. The data stored in it can be interpreted in
 	// different ways. Here, we will say that it is just a simple 1D-array
 	// and therefore bind the buffer to the corresponding target.
-	glBindBuffer(GL_ARRAY_BUFFER, /*! \todo bind the previously generated Buffer */0u);
+	glBindBuffer(GL_ARRAY_BUFFER, data.bo);
 
-	glBufferData(GL_ARRAY_BUFFER, /*! \todo how many bytes should the buffer contain? */0u,
-	             /* where is the data stored on the CPU? */vertices.data(),
-	             /* inform OpenGL that the data is modified once, but used often */GL_STATIC_DRAW);
-
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(), GL_STATIC_DRAW);	// The glBufferData copies the previously defined vertex data into the buffer's memory
 	// Vertices have been just stored into a buffer, but we still need to
 	// tell Vertex Array where to find them, and how to interpret the data
 	// within that buffer.
@@ -93,44 +95,177 @@ parametric_shapes::createQuad(float const width, float const height,
 	// GL_ARRAY_BUFFER as its source for the data. How to interpret it is
 	// specified below:
 	glVertexAttribPointer(static_cast<unsigned int>(bonobo::shader_bindings::vertices),
-	                      /*! \todo how many components do our vertices have? */0,
-	                      /* what is the type of each component? */GL_FLOAT,
-	                      /* should it automatically normalise the values stored */GL_FALSE,
-	                      /* once all components of a vertex have been read, how far away (in bytes) is the next vertex? */0,
-	                      /* how far away (in bytes) from the start of the buffer is the first vertex? */reinterpret_cast<GLvoid const*>(0x0));
+	                    3,
+	                    GL_FLOAT,
+	                    GL_FALSE,
+	                    3 * sizeof(float),
+	                    reinterpret_cast<GLvoid const*>(0x0)); 
 
 	// Now, let's allocate a second one for the indices.
 	//
 	// Have the buffer's name stored into `data.ibo`.
-	glGenBuffers(1, /*! \todo fill me */nullptr);
+	glGenBuffers(1, &data.ibo);
 
 	// We still want a 1D-array, but this time it should be a 1D-array of
 	// elements, aka. indices!
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, /*! \todo bind the previously generated Buffer */0u);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.ibo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_sets), index_sets.data(), GL_STATIC_DRAW);
 
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, /*! \todo how many bytes should the buffer contain? */0u,
-	             /* where is the data stored on the CPU? */index_sets.data(),
-	             /* inform OpenGL that the data is modified once, but used often */GL_STATIC_DRAW);
-
-	data.indices_nb = /*! \todo how many indices do we have? */0u;
+	data.indices_nb = index_sets.size() * 3; 
 
 	// All the data has been recorded, we can unbind them.
-	glBindVertexArray(0u);
-	glBindBuffer(GL_ARRAY_BUFFER, 0u);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0u);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	return data;
 }
 
-bonobo::mesh_data
-parametric_shapes::createSphere(float const radius,
-                                unsigned int const longitude_split_count,
-                                unsigned int const latitude_split_count)
+bonobo::mesh_data parametric_shapes::createSphere(float const radius,
+                                                  unsigned int const longitude_split_count,
+                                                  unsigned int const latitude_split_count)
 {
+    bonobo::mesh_data data;
 
-	//! \todo Implement this function
-	return bonobo::mesh_data();
+    if (longitude_split_count == 0u || latitude_split_count == 0u)
+    {
+        LogError("parametric_shapes::createSphere() requires non-zero splits.");
+        return data;
+    }
+
+    unsigned int vertex_count = (longitude_split_count + 1) * (latitude_split_count + 1);
+
+    // Vectors for storing vertices, normals, tangents, binormals, uvs, and indices
+    std::vector<glm::vec3> vertices(vertex_count);
+    std::vector<glm::vec3> normals(vertex_count);
+    std::vector<glm::vec3> tangents(vertex_count);  // Tangent vectors (∂p/∂θ)
+    std::vector<glm::vec3> binormals(vertex_count); // Binormal vectors (∂p/∂φ)
+    std::vector<glm::vec2> textcoords(vertex_count);
+    std::vector<glm::uvec3> index_sets;
+    // Create vertices, normals, tangents, and binormals
+    for (unsigned int lat = 0; lat <= latitude_split_count; ++lat)
+    {
+        float phi = glm::pi<float>() * static_cast<float>(lat) / static_cast<float>(latitude_split_count); // Latitude (ϕ): [0, π]
+        float sin_phi = glm::sin(phi);
+        float cos_phi = glm::cos(phi);
+
+        for (unsigned int lon = 0; lon <= longitude_split_count; ++lon)
+        {
+            float theta = 2.0f * glm::pi<float>() * static_cast<float>(lon) / static_cast<float>(longitude_split_count); // Longitude (θ): [0, 2π]
+			printf("Value of theta: %f\n", theta);
+            float sin_theta = glm::sin(theta);
+            float cos_theta = glm::cos(theta);
+			printf("longitude_split_count: %d\n", longitude_split_count);
+			printf("latitude_split_count: %d\n", latitude_split_count);
+
+            // Vertex position (p(θ, ϕ))
+            glm::vec3 vertex = glm::vec3(	
+                radius * sin_theta * sin_phi,  // X: longitude (left/right)
+                radius * cos_phi,              // Y: latitude (up/down)
+                radius * cos_theta * sin_phi   // Z: longitude (forward/back)
+            );
+
+            // Tangent 
+            glm::vec3 tangent = glm::vec3(
+                radius * cos_theta * sin_phi, // ∂p/∂θ X	//We need to simplify
+                0.0f,                          // ∂p/∂θ Y
+                -radius * sin_phi * sin_theta   // ∂p/∂θ Z
+            );
+
+            // Binormal 
+            glm::vec3 binormal = glm::vec3(
+                radius * sin_theta * cos_phi,  // ∂p/∂ϕ X
+                radius * sin_phi,             // ∂p/∂ϕ Y
+                radius * cos_theta * cos_phi   // ∂p/∂ϕ Z
+            );
+			//glm::vec3 normal = glm::normalize(vertex);
+			glm::vec3 normal = glm::vec3(
+				glm::cross(tangent, binormal)
+			);
+
+            // Texture coordinates (u, v)
+            glm::vec2 texcoord = glm::vec2(static_cast<float>(lon) / static_cast<float>(longitude_split_count),
+                                     static_cast<float>(lat) / static_cast<float>(latitude_split_count));
+
+            // Store vertex, normal, tangent, binormal, and uv
+            unsigned int index = lat * (longitude_split_count + 1) + lon;
+            vertices[index] = vertex;
+            normals[index] = normal;
+            tangents[index] = tangent;
+            binormals[index] = binormal;
+            textcoords[index] = texcoord;
+        }
+    }
+	index_sets = std::vector<glm::uvec3>(2u * longitude_split_count * latitude_split_count);
+	size_t index = 0u;
+	for (unsigned int lat = 0u; lat < latitude_split_count; ++lat)
+	{
+    	for (unsigned int lon = 0u; lon < longitude_split_count; ++lon)
+    	{
+        	unsigned int first = lat * (longitude_split_count + 1) + lon;
+        	unsigned int second = first + longitude_split_count + 1;
+
+        	// First triangle of the quad (counter-clockwise winding)
+        	index_sets[index] = glm::uvec3(first, second, first + 1);
+        	++index;
+
+        	// Second triangle of the quad (counter-clockwise winding)
+        	index_sets[index] = glm::uvec3(second, second + 1, first + 1);
+        	++index;
+    }
 }
+
+
+    // Generate and bind the VAO
+    glGenVertexArrays(1, &data.vao);
+    glBindVertexArray(data.vao);
+
+    // Generate and bind the vertex buffer (positions)
+    glGenBuffers(1, &data.bo);
+    glBindBuffer(GL_ARRAY_BUFFER, data.bo);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), vertices.data(), GL_STATIC_DRAW);
+
+    // Enable the vertex position attribute and set the data layout
+    glEnableVertexAttribArray(static_cast<unsigned int>(bonobo::shader_bindings::vertices));
+    glVertexAttribPointer(static_cast<unsigned int>(bonobo::shader_bindings::vertices), 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    // Generate and bind the normal buffer
+    GLuint normal_bo;
+    glGenBuffers(1, &normal_bo);
+    glBindBuffer(GL_ARRAY_BUFFER, normal_bo);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), normals.data(), GL_STATIC_DRAW);
+
+    // Enable the normal attribute and set the data layout
+    glEnableVertexAttribArray(static_cast<unsigned int>(bonobo::shader_bindings::normals));
+    glVertexAttribPointer(static_cast<unsigned int>(bonobo::shader_bindings::normals), 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    // Generate and bind the UV buffer
+    GLuint textcoord_bo;
+    glGenBuffers(1, &textcoord_bo);
+    glBindBuffer(GL_ARRAY_BUFFER, textcoord_bo);
+    glBufferData(GL_ARRAY_BUFFER, textcoords.size() * sizeof(glm::vec2), textcoords.data(), GL_STATIC_DRAW);
+
+    // Enable the UV attribute and set the data layout
+    glEnableVertexAttribArray(static_cast<unsigned int>(bonobo::shader_bindings::texcoords));
+    glVertexAttribPointer(static_cast<unsigned int>(bonobo::shader_bindings::texcoords), 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    // Generate and bind the index buffer
+    glGenBuffers(1, &data.ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_sets.size() * sizeof(glm::uvec3), index_sets.data(), GL_STATIC_DRAW);
+    // Set the number of indices
+    data.indices_nb = static_cast<GLsizei>(index_sets.size() * 3); // Each uvec3 contains 3 indices
+
+    // Unbind the VAO and buffers
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    return data;
+}
+
+
+
 
 bonobo::mesh_data
 parametric_shapes::createTorus(float const major_radius,
@@ -222,7 +357,7 @@ parametric_shapes::createCircleRing(float const radius,
 			++index;
 		}
 	}
-
+	
 	bonobo::mesh_data data;
 	glGenVertexArrays(1, &data.vao);
 	assert(data.vao != 0u);
