@@ -220,11 +220,11 @@ edaf80::Assignment2::run()
                 // Compute the interpolation factor
                 float total_duration = 10.0f; 
                 float t = std::fmod(elapsed_time_s, total_duration) / total_duration;
-
+				
                 // Determine which segment of control points to use
                 size_t segment = static_cast<size_t>(t * (control_point_locations.size() - 3));
                 float local_t = (t * (control_point_locations.size() - 3)) - segment;
-
+				printf("Segment value:  %zu\n", segment);
                 // Get control points for this segment
                 glm::vec3 p0 = control_point_locations[segment];
                 glm::vec3 p1 = control_point_locations[segment + 1];
