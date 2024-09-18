@@ -216,33 +216,43 @@ edaf80::Assignment2::run()
 
 
 		if (interpolate) {
-          //  if (control_point_locations.size() >= 4) {
-                // Compute the interpolation factor
-                float total_duration = 10.0f; 
-                float t = std::fmod(elapsed_time_s, total_duration) / total_duration;
-				
-                // Determine which segment of control points to use
-                size_t segment = static_cast<size_t>(t * (control_point_locations.size() - 3));
-                float local_t = (t * (control_point_locations.size() - 3)) - segment;
-				printf("Segment value:  %zu\n", segment);
-                // Get control points for this segment
-                glm::vec3 p0 = control_point_locations[segment];
-                glm::vec3 p1 = control_point_locations[segment + 1];
-                glm::vec3 p2 = control_point_locations[segment + 2];
-                glm::vec3 p3 = control_point_locations[segment + 3];
+			// Compute the interpolation factor
+			float total_duration = 30.0f;
+			float t = std::fmod(elapsed_time_s, total_duration) / total_duration;
 
-                glm::vec3 interpolatedPosition;
+			// Calculate total segments and wrap-around segment
+			size_t num_segments = control_point_locations.size();
+			size_t segment = static_cast<size_t>(t * num_segments);
+			float local_t = (t * num_segments) - segment;
 
-                if (use_linear) {
-                    interpolatedPosition = interpolation::evalLERP(p0, p1, local_t);
-                } else {
-                    interpolatedPosition = interpolation::evalCatmullRom(p0, p1, p2, p3, catmull_rom_tension, local_t);
-                }
+			// Handle wrap
+			size_t prev_segment = (segment + num_segments - 1) % num_segments;
+			size_t next_segment = (segment + 1) % num_segments;
+			size_t next_next_segment = (segment + 2) % num_segments;
+			size_t last_segment = (segment + 3) % num_segments;
 
-                // Update the object's position
-                circle_rings.get_transform().SetTranslate(interpolatedPosition);
-        //    }
-        }
+			// Get control points for this segment
+			glm::vec3 p0 = control_point_locations[prev_segment];
+			glm::vec3 p1 = control_point_locations[segment];
+			glm::vec3 p2 = control_point_locations[next_segment];
+			glm::vec3 p3 = control_point_locations[last_segment];
+
+
+
+
+			glm::vec3 interpolatedPosition;
+
+			if (use_linear) {
+				interpolatedPosition = interpolation::evalLERP(p0, p1, local_t);
+			}
+			else {
+				interpolatedPosition = interpolation::evalCatmullRom(p0, p1, p2, p3, catmull_rom_tension, local_t);
+			}
+
+			// Update the object's position
+			circle_rings.get_transform().SetTranslate(interpolatedPosition);
+		}
+
 
 		circle_rings.render(mCamera.GetWorldToClipMatrix());
 		if (show_control_points) {

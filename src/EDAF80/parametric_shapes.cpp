@@ -167,9 +167,9 @@ bonobo::mesh_data parametric_shapes::createSphere(float const radius,
 
             // Tangent 
             glm::vec3 tangent = glm::vec3(
-                radius * cos_theta * sin_phi, // ∂p/∂θ X	//We need to simplify
+                radius * cos_theta, // ∂p/∂θ X	//We need to simplify
                 0.0f,                          // ∂p/∂θ Y
-                -radius * sin_phi * sin_theta   // ∂p/∂θ Z
+                -radius * sin_theta   // ∂p/∂θ Z
             );
 
             // Binormal 
