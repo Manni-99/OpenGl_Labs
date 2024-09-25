@@ -217,7 +217,7 @@ edaf80::Assignment2::run()
 
 		if (interpolate) {
 			// Compute the interpolation factor
-			float total_duration = 30.0f;
+			float total_duration = 10.0f;
 			float t = std::fmod(elapsed_time_s, total_duration) / total_duration;
 
 			// Calculate total segments and wrap-around segment

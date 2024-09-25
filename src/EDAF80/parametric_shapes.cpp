@@ -112,7 +112,6 @@ parametric_shapes::createQuad(float const width, float const height,
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_sets), index_sets.data(), GL_STATIC_DRAW);
 
 	data.indices_nb = index_sets.size() * 3; 
-
 	// All the data has been recorded, we can unbind them.
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -152,11 +151,8 @@ bonobo::mesh_data parametric_shapes::createSphere(float const radius,
         for (unsigned int lon = 0; lon <= longitude_split_count; ++lon)
         {
             float theta = 2.0f * glm::pi<float>() * static_cast<float>(lon) / static_cast<float>(longitude_split_count); // Longitude (θ): [0, 2π]
-			printf("Value of theta: %f\n", theta);
             float sin_theta = glm::sin(theta);
             float cos_theta = glm::cos(theta);
-			printf("longitude_split_count: %d\n", longitude_split_count);
-			printf("latitude_split_count: %d\n", latitude_split_count);
 
             // Vertex position (p(θ, ϕ))
             glm::vec3 vertex = glm::vec3(	
