@@ -92,6 +92,15 @@ void edaf80::Assignment3::run()
 											 skybox_shader);
 	if (skybox_shader == 0u)
 		LogError("Failed to load skybox shader");
+	
+	GLuint phong_shader = 0u;
+	program_manager.CreateAndRegisterProgram("Phong Shading",
+											 {{ShaderType::vertex, "EDAF80/phong.vert"},
+											  {ShaderType::fragment, "EDAF80/phong.frag"}},
+											 phong_shader);
+	if (phong_shader == 0u)
+		LogError("Failed to load phong shader");
+
 
 	auto light_position = glm::vec3(-2.0f, 4.0f, 2.0f);
 	auto const set_uniforms = [&light_position](GLuint program)
@@ -111,57 +120,12 @@ void edaf80::Assignment3::run()
 	//
 	// Set up the two spheres used.
 	//
-	auto skybox_shape = parametric_shapes::createSphere(20.0f, 100u, 100u);
+	auto skybox_shape = parametric_shapes::createSphere(200.0f, 1000u, 1000u); //Increased value to give the illusion of an infinite skybox
 	if (skybox_shape.vao == 0u)
 	{
 		LogError("Failed to retrieve the mesh for the skybox");
 		return;
 	}
-	/*float skyboxVertices[] =
-		{
-			-1.0f, -1.0f, 1.0f,
-			1.0f, -1.0f, 1.0f,
-			1.0f, -1.0f, -1.0f,
-			-1.0f, -1.0f, -1.0f,
-			-1.0f, 1.0f, 1.0f,
-			1.0f, 1.0f, 1.0f,
-			1.0f, 1.0f, -1.0f,
-			-1.0f, 1.0f, -1.0f};
-	unsigned int skyboxIndices[] =
-		{
-			// Right
-			1, 2, 6,
-			6, 5, 1,
-			// Left
-			0, 4, 7,
-			7, 3, 0,
-			// Top
-			4, 5, 6,
-			6, 7, 4,
-			// Bottom
-			0, 3, 2,
-			2, 1, 0,
-			// Back
-			0, 1, 5,
-			5, 4, 0,
-			// Front
-			3, 7, 6,
-			6, 2, 3};
-
-	unsigned int skyboxVAO, skyboxVBO, skyboxEBO;
-	glGenVertexArrays(1, &skyboxVAO);
-	glGenBuffers(1, &skyboxVBO);
-	glGenBuffers(1, &skyboxEBO);	
-	glBindVertexArray(skyboxVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skyboxEBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxIndices), &skyboxIndices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);*/
 
 	GLuint cubeMap = bonobo::loadTextureCubeMap("/home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/res/cubemaps/LarnacaCastle/posx.jpg", "/home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/res/cubemaps/LarnacaCastle/negx.jpg", "/home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/res/cubemaps/LarnacaCastle/posy.jpg",
 												"/home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/res/cubemaps/LarnacaCastle/negy.jpg", "/home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/res/cubemaps/LarnacaCastle/posz.jpg", "/home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/res/cubemaps/LarnacaCastle/negz.jpg",
@@ -190,11 +154,21 @@ void edaf80::Assignment3::run()
 	demo_material.specular = glm::vec3(1.0f, 1.0f, 1.0f);
 	demo_material.shininess = 10.0f;
 
+	GLuint demo_diffuse_texture = bonobo::loadTexture2D("/home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/res/textures/leather_red_02_coll1_2k.jpg", true);
+	GLuint demo_specular_texture = bonobo::loadTexture2D("/home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/res/textures/leather_red_02_rough_2k.jpg", true);
+	GLuint demo_normal_texture = bonobo::loadTexture2D("/home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/res/textures/leather_red_02_nor_2k.jpg", true);
+
+	Log("demoTexture value: %d\n", demo_diffuse_texture);
 	Node demo_sphere;
 	demo_sphere.set_geometry(demo_shape);
 	demo_sphere.set_material_constants(demo_material);
-	demo_sphere.set_program(&fallback_shader, phong_set_uniforms);
+	demo_sphere.set_program(&phong_shader, phong_set_uniforms);
+	demo_sphere.add_texture("demo_diffuse_texture", demo_diffuse_texture, GL_TEXTURE_2D);
+	demo_sphere.add_texture("demo_specular_texture", demo_specular_texture, GL_TEXTURE_2D);
+	demo_sphere.add_texture("demo_normal_texture", demo_normal_texture, GL_TEXTURE_2D);
 
+
+	// Here we should implement the smaller sphere to change its color, phong shading
 	glClearDepthf(1.0f);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
@@ -263,9 +237,11 @@ void edaf80::Assignment3::run()
 
 		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 		bonobo::changePolygonMode(polygon_mode);
+
 		glDepthFunc(GL_LEQUAL);
 		skybox.render(mCamera.GetWorldToClipMatrix());
-		glDepthFunc(GL_LESS);
+		glDepthFunc(GL_LESS);	
+
 		demo_sphere.render(mCamera.GetWorldToClipMatrix());
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

@@ -9,7 +9,8 @@ uniform mat4 vertex_world_to_clip;
 
 void main()
 {
+    textCoords = vec3(aPos.x, aPos.y, -aPos.z); //Test 
     vec4 pos = vertex_world_to_clip * vertex_model_to_world * vec4(aPos, 1.0f);
     gl_Position = vec4(pos.x, pos.y, pos.w, pos.w);
-    textCoords = vec3(aPos.x, aPos.y, -aPos.z); //Test 
+    
 }
