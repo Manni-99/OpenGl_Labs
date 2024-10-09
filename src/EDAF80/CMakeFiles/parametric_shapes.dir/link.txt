@@ -1,0 +1,2 @@
+/usr/bin/ar qc libparametric_shapes.a CMakeFiles/parametric_shapes.dir/parametric_shapes.cpp.o
+/usr/bin/ranlib libparametric_shapes.a

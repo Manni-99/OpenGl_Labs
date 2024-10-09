@@ -16,102 +16,104 @@ parametric_shapes::createQuad(float const width, float const height,
 							  unsigned int const horizontal_split_count,
 							  unsigned int const vertical_split_count)
 {
-	auto const vertices = std::array<glm::vec3, 4>{
-		glm::vec3(0.0f, 0.0f, 0.0f),
-		glm::vec3(width, 0.0f, 0.0f),
-		glm::vec3(width, height, 0.0f),
-		glm::vec3(0.0f, height, 0.0f)};
-
-	auto const index_sets = std::array<glm::uvec3, 2>{
-		glm::uvec3(0u, 1u, 2u),
-		glm::uvec3(0u, 2u, 3u)};
-
+	Log("Start of create Quad");
+	std::vector<glm::uvec3> index_sets;
 	bonobo::mesh_data data;
 
-	if (horizontal_split_count > 0u || vertical_split_count > 0u)
+	// Calculate the total number of vertices
+	unsigned int const num_verts_x = horizontal_split_count + 1;
+	unsigned int const num_verts_z = vertical_split_count + 1;
+	unsigned int const total_vertices = num_verts_x * num_verts_z;
+
+	// Create vectors with pre-allocated size (instead of reserve and emplace_back)
+	std::vector<glm::vec3> vertices(total_vertices);
+	std::vector<glm::vec3> texcoords(total_vertices);
+
+	// Calculate step size in the X and Z directions (for the x-z plane)
+	float const step_x = width / horizontal_split_count;
+	float const step_z = height / vertical_split_count;
+
+	// Fill vertices and texture coordinates using indexed access
+	unsigned int index = 0;
+	for (unsigned int z = 0; z <= horizontal_split_count; ++z)
 	{
-		LogError("parametric_shapes::createQuad() does not support tesselation.");
+		for (unsigned int x = 0; x <= vertical_split_count; ++x)
+		{
+			glm::vec3 vertex = glm::vec3(x * step_x - width * 0.5f, 0.0f, z * step_z - height * 0.5f);
+			float const u = static_cast<float>(x) / horizontal_split_count;
+			float const v = static_cast<float>(z) / vertical_split_count;
+
+			// Vertices in the x-z plane, y is always 0
+			vertices[index] = vertex;				  // x-z plane
+			texcoords[index] = glm::vec3(u, v, 0.0f); // Texture coordinates
+			++index;
+		}
+	}
+	index_sets = std::vector<glm::uvec3>(2u * horizontal_split_count * vertical_split_count);
+	size_t index_sets_counter = 0u;
+	for (unsigned int lat = 0u; lat < vertical_split_count; ++lat)
+	{
+		for (unsigned int lon = 0u; lon < horizontal_split_count; ++lon)
+		{
+			unsigned int first = lat * (horizontal_split_count + 1) + lon;
+			unsigned int second = first + horizontal_split_count + 1;
+
+			// First triangle of the quad (counter-clockwise winding)
+			index_sets[index_sets_counter] = glm::uvec3(first, second, first + 1);
+			++index_sets_counter;
+
+			// Second triangle of the quad (counter-clockwise winding)
+			index_sets[index_sets_counter] = glm::uvec3(second, second + 1, first + 1);
+			++index_sets_counter;
+		}
+	}
+
+	if (vertices.empty() || texcoords.empty() || index_sets.empty())
+	{
+		LogError("Vertices, texture coordinates, or indices are empty!");
 		return data;
 	}
 
-	//
-	// NOTE:
-	//
-	// Only the values preceeded by a `\todo` tag should be changed, the
-	// other ones are correct!
-	//
+	Log("Before offset");
+	auto const vertices_offset = 0u;
+	auto const vertices_size = static_cast<GLsizeiptr>(vertices.size() * sizeof(glm::vec3));
+	auto const texcoords_offset = vertices_size;
+	auto const texcoords_size = static_cast<GLsizeiptr>(texcoords.size() * sizeof(glm::vec3));
+	auto const bo_size = static_cast<GLsizeiptr>(vertices_size + texcoords_size);
 
-	// Create a Vertex Array Object: it will remember where we stored the
-	// data on the GPU, and  which part corresponds to the vertices, which
-	// one for the normals, etc.
-	//
-	// The following function will create new Vertex Arrays, and pass their
-	// name in the given array (second argument). Since we only need one,
-	// pass a pointer to `data.vao`.
+	Log("Vertices size: %d\n", vertices_size);
+	fflush(stdout);
+
 	glGenVertexArrays(1, &data.vao);
-
-	// To be able to store information, the Vertex Array has to be bound
-	// first.
+	assert(data.vao != 0u);
 	glBindVertexArray(data.vao);
 
-	// To store the data, we need to allocate buffers on the GPU. Let's
-	// allocate a first one for the vertices.
-	//
-	// The following function's syntax is similar to `glGenVertexArray()`:
-	// it will create multiple OpenGL objects, in this case buffers, and
-	// return their names in an array. Have the buffer's name stored into
-	// `data.bo`.
 	glGenBuffers(1, &data.bo);
-
-	// Similar to the Vertex Array, we need to bind it first before storing
-	// anything in it. The data stored in it can be interpreted in
-	// different ways. Here, we will say that it is just a simple 1D-array
-	// and therefore bind the buffer to the corresponding target.
 	glBindBuffer(GL_ARRAY_BUFFER, data.bo);
+	Log("Buffer size in createQuad:  %d\n", bo_size);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(), GL_STATIC_DRAW); // The glBufferData copies the previously defined vertex data into the buffer's memory
-	// Vertices have been just stored into a buffer, but we still need to
-	// tell Vertex Array where to find them, and how to interpret the data
-	// within that buffer.
-	//
-	// You will see shaders in more detail in lab 3, but for now they are
-	// just pieces of code running on the GPU and responsible for moving
-	// all the vertices to clip space, and assigning a colour to each pixel
-	// covered by geometry.
-	// Those shaders have inputs, some of them are the data we just stored
-	// in a buffer object. We need to tell the Vertex Array which inputs
-	// are enabled, and this is done by the following line of code, which
-	// enables the input for vertices:
+	// Allocate memory for both vertices and texcoords
+	glBufferData(GL_ARRAY_BUFFER, bo_size, nullptr, GL_STATIC_DRAW);
+
+	glBufferSubData(GL_ARRAY_BUFFER, vertices_offset, vertices_size, static_cast<GLvoid const *>(vertices.data()));
 	glEnableVertexAttribArray(static_cast<unsigned int>(bonobo::shader_bindings::vertices));
+	glVertexAttribPointer(static_cast<unsigned int>(bonobo::shader_bindings::vertices), 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<GLvoid const *>(0x0));
+	
+	glBufferSubData(GL_ARRAY_BUFFER, texcoords_offset, texcoords_size, static_cast<GLvoid const *>(texcoords.data()));
+	glEnableVertexAttribArray(static_cast<unsigned int>(bonobo::shader_bindings::texcoords));
+	glVertexAttribPointer(static_cast<unsigned int>(bonobo::shader_bindings::texcoords), 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<GLvoid const *>(texcoords_offset));
 
-	// Once an input is enabled, we need to explain where the data comes
-	// from, and how it interpret it. When calling the following function,
-	// the Vertex Array will automatically use the current buffer bound to
-	// GL_ARRAY_BUFFER as its source for the data. How to interpret it is
-	// specified below:
-	glVertexAttribPointer(static_cast<unsigned int>(bonobo::shader_bindings::vertices),
-						  3,
-						  GL_FLOAT,
-						  GL_FALSE,
-						  3 * sizeof(float),
-						  reinterpret_cast<GLvoid const *>(0x0));
+	glBindBuffer(GL_ARRAY_BUFFER, 0u);
 
-	// Now, let's allocate a second one for the indices.
-	//
-	// Have the buffer's name stored into `data.ibo`.
+	data.indices_nb = static_cast<GLsizei>(index_sets.size() * 3u);
 	glGenBuffers(1, &data.ibo);
-
-	// We still want a 1D-array, but this time it should be a 1D-array of
-	// elements, aka. indices!
+	assert(data.ibo != 0u);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data.ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index_sets), index_sets.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(index_sets.size() * sizeof(glm::uvec3)), reinterpret_cast<GLvoid const *>(index_sets.data()), GL_STATIC_DRAW);
 
-	data.indices_nb = index_sets.size() * 3;
-	// All the data has been recorded, we can unbind them.
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
+	glBindVertexArray(0u);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0u);
+	Log("We are the end of the createQuad method \n");
 	return data;
 }
 
@@ -119,7 +121,6 @@ bonobo::mesh_data parametric_shapes::createSphere(float const radius,
 												  unsigned int const longitude_split_count,
 												  unsigned int const latitude_split_count)
 {
-	
 
 	unsigned int vertex_count = (longitude_split_count + 1) * (latitude_split_count + 1);
 
@@ -146,7 +147,7 @@ bonobo::mesh_data parametric_shapes::createSphere(float const radius,
 			// Vertex position (p(θ, ϕ))
 			glm::vec3 vertex = glm::vec3(
 				radius * sin_theta * sin_phi, // X: longitude (left/right)
-				radius * cos_phi,			  // Y: latitude (up/down)
+				-radius * cos_phi,			  // Y: latitude (up/down)
 				radius * cos_theta * sin_phi  // Z: longitude (forward/back)
 			);
 
