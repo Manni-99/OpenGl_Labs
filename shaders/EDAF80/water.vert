@@ -76,13 +76,8 @@ void main()
     // We'll implement the TBN matrix here, get our derivates x and z -> transform them and send it over to our frag for shading 
     vec3 T = normalize(vec3(1, dWaveX, 0));        
     vec3 B = normalize(vec3(0, dWaveZ, 1));
-    vec3 N = normalize(cross(T, B));
+    vec3 N = normalize(cross(B, T));
     mat3 TBN = mat3(T, B, N);
-
-    vec3 nbump0 = normalize(T * ni0.x + B * ni0.y + N * ni0.z);
-    vec3 nbump1 = normalize(T * ni1.x + B * ni1.y + N * ni1.z);
-    vec3 nbump2 = normalize(T * ni2.x + B * ni2.y + N * ni2.z);
-
 
     vec3 normalMap = texture(water, texCoord.xy).rgb;
     normalMap = normalize(normalMap * 2.0 - 1.0); 
@@ -93,10 +88,11 @@ void main()
     vs_out.normal = vec3(normal_model_to_world * vec4(normal, 0.0)); // Normal mapping
     vs_out.texCoord = texCoord;
 
-    vec3 nbump = normalize(nbump0 + nbump1 + nbump2);
-	vs_out.nbump = nbump;
+    vec3 nbump = normalize(ni0 + ni1 + ni2);
     
-//    vs_out.normal = vec3(normal_model_to_world * vec4(N, 0.0)); Regular normal 
+	vs_out.nbump = TBN * nbump;
+    
+//  vs_out.normal = vec3(normal_model_to_world * vec4(N, 0.0)); Regular normal 
     
 	gl_Position = vertex_world_to_clip  * vec4(vs_out.vertex, 1.0);
 }
