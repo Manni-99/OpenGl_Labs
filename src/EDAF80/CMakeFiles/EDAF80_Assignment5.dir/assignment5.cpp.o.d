@@ -414,6 +414,17 @@ src/EDAF80/CMakeFiles/EDAF80_Assignment5.dir/assignment5.cpp.o: \
  /usr/include/c++/11/backward/auto_ptr.h \
  /usr/include/c++/11/pstl/glue_memory_defs.h \
  /usr/include/c++/11/pstl/execution_defs.h \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/EDAF80/parametric_shapes.hpp \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/core/helpers.hpp \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/external/GLAD/glad/glad.h \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/external/GLAD/KHR/khrplatform.h \
+ /usr/include/c++/11/functional /usr/include/c++/11/bits/std_function.h \
+ /usr/include/c++/11/vector /usr/include/c++/11/bits/stl_vector.h \
+ /usr/include/c++/11/bits/stl_bvector.h \
+ /usr/include/c++/11/bits/vector.tcc /usr/include/c++/11/bits/stl_algo.h \
+ /usr/include/c++/11/bits/algorithmfwd.h \
+ /usr/include/c++/11/bits/stl_heap.h \
+ /usr/include/c++/11/bits/uniform_int_dist.h \
  /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/config.hpp \
  /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/core/various.hpp \
  /usr/include/c++/11/fstream \
@@ -425,23 +436,27 @@ src/EDAF80/CMakeFiles/EDAF80_Assignment5.dir/assignment5.cpp.o: \
  /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/core/BuildSettings.h \
  /usr/include/c++/11/cstdarg \
  /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/core/LogView.h \
- /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/core/helpers.hpp \
- /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/external/GLAD/glad/glad.h \
- /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/external/GLAD/KHR/khrplatform.h \
- /usr/include/c++/11/functional /usr/include/c++/11/bits/std_function.h \
- /usr/include/c++/11/vector /usr/include/c++/11/bits/stl_vector.h \
- /usr/include/c++/11/bits/stl_bvector.h \
- /usr/include/c++/11/bits/vector.tcc /usr/include/c++/11/bits/stl_algo.h \
- /usr/include/c++/11/bits/algorithmfwd.h \
- /usr/include/c++/11/bits/stl_heap.h \
- /usr/include/c++/11/bits/uniform_int_dist.h \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/core/node.hpp \
  /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/core/ShaderProgramManager.hpp \
  /usr/include/c++/11/map /usr/include/c++/11/bits/stl_tree.h \
  /usr/include/c++/11/bits/stl_map.h \
  /usr/include/c++/11/bits/stl_multimap.h \
- /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/external/Dear\ ImGui/imgui.h \
- /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/external/Dear\ ImGui/imconfig.h \
- /usr/include/string.h /usr/include/strings.h \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/dependencies/glm-src/glm/gtc/type_ptr.hpp \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/dependencies/glm-src/glm/gtc/vec1.hpp \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/dependencies/glm-src/glm/ext/vector_bool1.hpp \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/dependencies/glm-src/glm/ext/vector_bool1_precision.hpp \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/dependencies/glm-src/glm/ext/vector_float1.hpp \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/dependencies/glm-src/glm/ext/vector_float1_precision.hpp \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/dependencies/glm-src/glm/ext/vector_double1.hpp \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/dependencies/glm-src/glm/ext/vector_double1_precision.hpp \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/dependencies/glm-src/glm/ext/vector_int1.hpp \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/dependencies/glm-src/glm/ext/vector_int1_precision.hpp \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/dependencies/glm-src/glm/ext/vector_uint1.hpp \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/dependencies/glm-src/glm/ext/vector_uint1_precision.hpp \
+ /usr/include/c++/11/cstring /usr/include/string.h /usr/include/strings.h \
  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/dependencies/glm-src/glm/gtc/type_ptr.inl \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/external/Dear\ ImGui/imgui.h \
+ /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/src/external/Dear\ ImGui/imconfig.h \
  /home/manni/LTH/Year3/Datorgrafik/AAA_Programing/CG_Labs/dependencies/tinyfiledialogs-src/tinyfiledialogs.h

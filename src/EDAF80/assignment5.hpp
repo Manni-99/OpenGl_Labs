@@ -29,6 +29,10 @@ namespace edaf80
 		//! render loop.
 		void run();
 
+		bool checkCollisionSkybox(const glm::vec3 &min1, const glm::vec3 &max1, const glm::vec3 &min2, const glm::vec3 &max2);
+
+		bool checkCollisionCoins(const glm::vec3 &min1, const glm::vec3 &max1, const glm::vec3 &min2, const glm::vec3 &max2);
+
 	private:
 		FPSCameraf     mCamera;
 		InputHandler   inputHandler;

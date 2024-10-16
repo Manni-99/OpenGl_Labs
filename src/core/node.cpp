@@ -70,6 +70,7 @@ Node::render(glm::mat4 const& view_projection, glm::mat4 const& world, GLuint pr
 	utils::opengl::debug::endDebugGroup();
 }
 
+
 void
 Node::set_geometry(bonobo::mesh_data const& shape)
 {

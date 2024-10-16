@@ -72,10 +72,7 @@ void edaf80::Assignment4::run()
 		glUniform3fv(glGetUniformLocation(program, "light_position"), 1, glm::value_ptr(light_position));
 	};
 
-	/*GLuint skyboxTextureID;
-	glGenTextures(1, &skyboxTextureID);
-	// Step 2: Bind the texture
-	glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);*/
+	
 	float elapsed_time_s = 0.0f;
 	bool use_normal_mapping = false;
 	auto const water_set_uniforms = [&use_normal_mapping, &light_position, &camera_position, &elapsed_time_s](GLuint program)
@@ -84,7 +81,6 @@ void edaf80::Assignment4::run()
 		glUniform3fv(glGetUniformLocation(program, "light_position"), 1, glm::value_ptr(light_position));
 		glUniform3fv(glGetUniformLocation(program, "camera_position"), 1, glm::value_ptr(camera_position));
 		glUniform1fv(glGetUniformLocation(program, "ellapsed_time_s"), 1, &elapsed_time_s);
-		//glUniform1i(glGetUniformLocation(program, "skybox"), 0); // Texture unit 0
 	};
 
 	auto skybox_shape = parametric_shapes::createSphere(200.0f, 1000u, 1000u); // Increased value to give the illusion of an infinite skybox
